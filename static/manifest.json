@@ -1,0 +1,31 @@
+{
+  "name": "Gituhb Template Chooser",
+  "version": "1.0",
+  "description": "A browser extension that allows you to select pr templates",
+  "permissions": ["activeTab", "declarativeContent", "storage"],
+  "page_action": {
+    "default_title": "Github PR",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/key16.png",
+      "32": "images/key32.png",
+      "128": "images/key128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://github.com/*/*/compare"],
+      "js": ["content.js"]
+    }
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "icons": {
+    "16": "images/key16.png",
+    "32": "images/key32.png",
+    "128": "images/key128.png"
+  },
+  "manifest_version": 2
+}
