@@ -1,17 +1,6 @@
 const TOKEN_LOCAL_STORAGE_KEY = 'rms-pr-template-picker:token';
 
 
-const getToken = () => {
-  return localStorage.getItem(TOKEN_LOCAL_STORAGE_KEY);
-}
-
-const getRequestHeaders = (token) => {
-  return {
-    Authorization: `token: ${token}`,
-    Accept: 'application/vnd.github.v3+json'
-  };
-}
-
 const composeContentsUrl = (owner, repo, path = '') => {
   return `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 };
@@ -22,6 +11,13 @@ const getContents = ({ owner, repo, path = '', token }) => {
     method: 'get',
     url: composeContentsUrl(owner, repo, path)
   }).then((res) => res.json())
+}
+
+const getRequestHeaders = (token) => {
+  return {
+    Authorization: `token: ${token}`,
+    Accept: 'application/vnd.github.v3+json'
+  };
 }
 
 const getTemplates = async (data) => {
@@ -35,6 +31,18 @@ const getTemplates = async (data) => {
   }
 
   // Get all templates in PULL_REQUEST_TEMPLATE
+}
+
+const getToken = () => {
+  return localStorage.getItem(TOKEN_LOCAL_STORAGE_KEY);
+}
+
+const testToken = (token) => {
+  return fetch({
+    headers: getRequestHeaders(token),
+    method: 'get',
+    url: 'https://api.github.com/repos'
+  })
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -62,7 +70,7 @@ chrome.runtime.onConnect.addListener((port) => {
             data: templates
           })
         });
-        // maybe start getting templates hhere, vould send back an org and repo value
+        // maybe start getting templates here, would send back an org and repo value
         break;
       case 'set_token':
         chrome.storage.sync.set({ token: data }, () => {
@@ -72,4 +80,3 @@ chrome.runtime.onConnect.addListener((port) => {
     }
   });
 });
-
