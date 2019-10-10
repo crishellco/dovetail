@@ -6,7 +6,7 @@ const app = new App({
 	target,
 });
 
-var port = chrome.runtime.connect({ name: 'template-api' });
+const port = chrome.runtime.connect({ name: 'template-api' });
 
 port.onMessage.addListener(function({type, data}) {
 	switch(type) {
