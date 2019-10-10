@@ -1,26 +1,33 @@
 <script>
+  let isTestingToken = false;
   let token = "";
 
-  export const port = chrome.runtime.connect({ name: 'template-api' });
+  const port = chrome.runtime.connect({ name: 'template-api' });
 
-  export function postMessage(message) {
+  function postMessage(message) {
     port.postMessage(message);
   }
 
   function handleAddTokenClick() {
-    postMessage({ type: 'token', data: token })
     /**
      * Send token to background to be stored
      * Test connection using /user/repos (update UI to show "connecting")
      * If fail, show error and form
      * If pass, update UI to show connected (and maybe link to remove/re-enter token)
      */
+    isTestingToken = true;
+    postMessage({ type: 'set_token', data: token });
   }
 </script>
 
-<div class="p-4 flex flex-col">
+<div class="p-4 flex flex-col" style="width: 30rem">
+  {#if isTestingToken}
+  <div class="flex text-green-600 font-semibold font-mono text-center">
+    Connecting...
+  </div>
+  {:else}
   <div class="flex">
-    <div style="width: 20rem">
+    <div class="flex-1">
       <input
         bind:value={token}
         class="bg-gray-200 appearance-none border-2 border-gray-300 border-r-0
@@ -45,4 +52,5 @@
       Creating Personal Auth Tokens
     </a>
   </div>
+  {/if}
 </div>

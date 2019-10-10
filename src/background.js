@@ -1,6 +1,5 @@
 const TOKEN_LOCAL_STORAGE_KEY = 'rms-pr-template-picker:token';
 
-
 const composeContentsUrl = (owner, repo, path = '') => {
   return `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 };
@@ -43,12 +42,23 @@ const getTemplates = async (data) => {
   });
 }
 
-const testToken = (token) => {
-  return fetch({
-    headers: getRequestHeaders(token),
-    method: 'get',
-    url: 'https://api.github.com/repos'
-  })
+const testToken = async (token) => {
+  try {
+    await fetch({
+      headers: getRequestHeaders(token),
+      method: 'get',
+      url: 'https://api.github.com/user/repos'
+    });
+
+    console.log('token success', response);
+    // chrome.storage.sync.set({ token: data }, () => {
+    //   console.log("The token has been set");
+
+    //   // Send message to popup
+    // });
+  } catch(e) {
+    console.log('token fail', e);
+  }
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -79,9 +89,7 @@ chrome.runtime.onConnect.addListener((port) => {
         // maybe start getting templates here, would send back an org and repo value
         break;
       case 'set_token':
-        chrome.storage.sync.set({ token: data }, () => {
-          console.log("The token has been set");
-        });
+        testToken(data);
         break;
     }
   });
