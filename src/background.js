@@ -21,16 +21,26 @@ const getRequestHeaders = (token) => {
 }
 
 const getTemplates = async (data) => {
+  let secondaryTemplateFiles;
   const templates = [];
 
-  // Get default template (PULL_REQUEST_TEMPLATE.md)
+  // Get primary template
   try {
     templates.push(await getContents({ path: '.github/PULL_REQUEST_TEMPLATE.md', ...data }));
+  } catch(e) {}
+
+  // Get secondary templates
+  try {
+    secondaryTemplateFiles = await getContents({ path: '.github/PULL_REQUEST_TEMPLATE.md', ...data })
   } catch(e) {
-    // not found...
+    secondaryTemplateFiles = [];
   }
 
-  // Get all templates in PULL_REQUEST_TEMPLATE
+  secondaryTemplateFiles.forEach(async ({ path }) => {
+    try {
+      templates.push(await getContents({ path, ...data }));
+    } catch(e) {}
+  });
 }
 
 const getToken = () => {
