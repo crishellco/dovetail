@@ -8,8 +8,11 @@ const app = new App({
 
 app.port.onMessage.addListener(function({type, data}) {
 	switch(type) {
+		case 'templates':
+			app.$set({ templates: data });
+			break;
 		default:
-		break;
+			break;
 	}
 });
 
