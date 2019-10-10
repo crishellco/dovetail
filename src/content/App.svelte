@@ -1,5 +1,10 @@
 <script>
   export let templates = ['as']
+  export const port = chrome.runtime.connect({ name: 'template-api' });
+  export function postMessage(message) {
+    port.postMessage(message);
+  }
+
   let open = false
   let selection = null
 

@@ -1,7 +1,14 @@
 <script>
   let token = "";
 
+  export const port = chrome.runtime.connect({ name: 'template-api' });
+
+  export function postMessage(message) {
+    port.postMessage(message);
+  }
+
   function handleAddTokenClick() {
+    postMessage({ type: 'token', data: token })
     /**
      * Send token to background to be stored
      * Test connection using /user/repos (update UI to show "connecting")

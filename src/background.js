@@ -43,10 +43,6 @@ const getTemplates = async (data) => {
   });
 }
 
-const getToken = () => {
-  return localStorage.getItem(TOKEN_LOCAL_STORAGE_KEY);
-}
-
 const testToken = (token) => {
   return fetch({
     headers: getRequestHeaders(token),
