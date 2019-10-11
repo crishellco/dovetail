@@ -38,10 +38,14 @@ const getTemplates = async (data) => {
     return templates;
   }
 
-  (await secondaryTemplateFiles.json()).forEach(async ({ path }) => {
-    const response = await getContents({ path, ...data });
+  const secondaryTemplateFileContents = await secondaryTemplateFiles.json();
+  let i;
+
+  for(i in secondaryTemplateFileContents) {
+    const response = await getContents({ path: secondaryTemplateFileContents[i].path, ...data });
+    console.log(response);
     templates.push(await response.json());
-  });
+  }
 
   return templates;
 }
