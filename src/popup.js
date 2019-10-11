@@ -1,14 +1,18 @@
-import App from './popup/App.svelte';
+import App from "./popup/App.svelte";
 
 const app = new App({
-	target: document.body,
+  target: document.body
 });
 
-app.port.onMessage.addListener(function({type, data}) {
-	switch(type) {
-		default:
-		break;
-	}
+app.port.onMessage.addListener(function({ type, data }) {
+  switch (type) {
+    default:
+      break;
+  }
 });
+
+console.log('asfasdfasdfdasfasdfa');
+
+app.postMessage({ type: "ready" });
 
 export default app;

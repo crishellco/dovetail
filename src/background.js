@@ -14,7 +14,7 @@ const getContents = ({ owner, repo, path = '', token }) => {
 
 const getRequestHeaders = (token) => {
   return {
-    Authorization: `token: ${token}`,
+    Authorization: `token ${token}`,
     Accept: 'application/vnd.github.v3+json'
   };
 }
@@ -42,22 +42,24 @@ const getTemplates = async (data) => {
   });
 }
 
-const testToken = async (token) => {
+const postMessage = (message) => {
+  const port = chrome.runtime.connect({ name: 'template-api' });
+
+  port.postMessage(message);
+}
+
+const testAndSetToken = async (token, port) => {
   try {
-    await fetch({
+    await fetch('https://api.github.com/user', {
       headers: getRequestHeaders(token),
-      method: 'get',
-      url: 'https://api.github.com/user/repos'
+      method: 'get'
     });
-
-    console.log('token success', response);
-    // chrome.storage.sync.set({ token: data }, () => {
-    //   console.log("The token has been set");
-
-    //   // Send message to popup
-    // });
+    chrome.storage.sync.set({ token: token });
+    port.postMessage({type: 'token_valid', data: token});
   } catch(e) {
-    console.log('token fail', e);
+    console.log('test failed', e);
+    chrome.storage.sync.remove('token');
+    port.postMessage({type: 'token_invalid', data: token});
   }
 }
 
@@ -76,11 +78,18 @@ chrome.runtime.onConnect.addListener((port) => {
   port.onMessage.addListener(({ type, data }) => {
     switch(type) {
       case 'ready':
+        console.log('ready');
         chrome.storage.sync.get('token', async ({ token }) => {
+          port.postMessage({
+            type: 'token',
+            data: token
+          })
+
           const templates = await getTemplates({
             token,
             ...data
           })
+
           port.postMessage({
             type: 'templates',
             data: templates
@@ -89,7 +98,7 @@ chrome.runtime.onConnect.addListener((port) => {
         // maybe start getting templates here, would send back an org and repo value
         break;
       case 'set_token':
-        testToken(data);
+        testAndSetToken(data, port);
         break;
     }
   });

@@ -1,10 +1,26 @@
 <script>
   let isTestingToken = false;
-  let token = "";
+  let currentToken = "";
+  let newToken = "";
 
-  const port = chrome.runtime.connect({ name: 'template-api' });
+  export const port = chrome.runtime.connect({ name: 'template-api' });
 
-  function postMessage(message) {
+  port.onMessage.addListener(({ type, data }) => {
+    switch(type) {
+      case 'token':
+        currentToken = data;
+        break;
+      case 'token_valid':
+        isTestingToken = false;
+        break;
+      case 'token_invalid':
+        isTestingToken = false;
+        currentToken = data;
+        break;
+    }
+  });
+
+  export function postMessage(message) {
     port.postMessage(message);
   }
 
@@ -16,7 +32,7 @@
      * If pass, update UI to show connected (and maybe link to remove/re-enter token)
      */
     isTestingToken = true;
-    postMessage({ type: 'set_token', data: token });
+    postMessage({ type: 'set_token', data: newToken });
   }
 </script>
 
@@ -28,8 +44,9 @@
   {:else}
   <div class="flex">
     <div class="flex-1">
+      {currentToken}
       <input
-        bind:value={token}
+        bind:value={newToken}
         class="bg-gray-200 appearance-none border-2 border-gray-300 border-r-0
         rounded-l w-full py-2 px-4 text-gray-700 leading-tight
         focus:outline-none focus:border-blue-500"
