@@ -1,3 +1,4 @@
+// import parseUrl from 'parse-github-url';
 const TOKEN_LOCAL_STORAGE_KEY = 'rms-pr-template-picker:token';
 
 const composeContentsUrl = (owner, repo, path = '') => {
@@ -5,11 +6,11 @@ const composeContentsUrl = (owner, repo, path = '') => {
 };
 
 const getContents = ({ owner, repo, path = '', token }) => {
-  return fetch({
+  console.log('getContents', owner, repo, path, token);
+  return fetch(composeContentsUrl(owner, repo, path), {
     headers: getRequestHeaders(token),
     method: 'get',
-    url: composeContentsUrl(owner, repo, path)
-  }).then((res) => res.json())
+  });
 }
 
 const getRequestHeaders = (token) => {
@@ -24,22 +25,25 @@ const getTemplates = async (data) => {
   const templates = [];
 
   // Get primary template
-  try {
-    templates.push(await getContents({ path: '.github/PULL_REQUEST_TEMPLATE.md', ...data }));
-  } catch(e) {}
+  const primaryTemplate = await getContents({ path: '.github/PULL_REQUEST_TEMPLATE.md', ...data });
 
-  // Get secondary templates
-  try {
-    secondaryTemplateFiles = await getContents({ path: '.github/PULL_REQUEST_TEMPLATE.md', ...data })
-  } catch(e) {
-    secondaryTemplateFiles = [];
+  if(primaryTemplate.ok) {
+    templates.push(await primaryTemplate.json());
   }
 
-  secondaryTemplateFiles.forEach(async ({ path }) => {
-    try {
-      templates.push(await getContents({ path, ...data }));
-    } catch(e) {}
+  // Get secondary templates
+  secondaryTemplateFiles = await getContents({ path: '.github/PULL_REQUEST_TEMPLATE', ...data });
+
+  if(!secondaryTemplateFiles.ok) {
+    return templates;
+  }
+
+  (await secondaryTemplateFiles.json()).forEach(async ({ path }) => {
+    const response = await getContents({ path, ...data });
+    templates.push(await response.json());
   });
+
+  return templates;
 }
 
 const postMessage = (message) => {
@@ -63,6 +67,14 @@ const testAndSetToken = async (token, port) => {
   }
 }
 
+function parseUrl(url) {
+  const pieces = url.split('/');
+  return {
+    owner: pieces[3],
+    repo: pieces[4]
+  }
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
     chrome.declarativeContent.onPageChanged.addRules([{
@@ -78,24 +90,26 @@ chrome.runtime.onConnect.addListener((port) => {
   port.onMessage.addListener(({ type, data }) => {
     switch(type) {
       case 'ready':
-        console.log('ready');
         chrome.storage.sync.get('token', async ({ token }) => {
           port.postMessage({
             type: 'token',
             data: token
           })
 
+          console.log(data, parseUrl(data));
+
           const templates = await getTemplates({
             token,
-            ...data
+            ...parseUrl(data)
           })
+
+          console.log(templates);
 
           port.postMessage({
             type: 'templates',
             data: templates
           })
         });
-        // maybe start getting templates here, would send back an org and repo value
         break;
       case 'remove_token':
         chrome.storage.sync.remove('token');

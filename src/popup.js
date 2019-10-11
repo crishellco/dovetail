@@ -11,8 +11,6 @@ app.port.onMessage.addListener(function({ type, data }) {
   }
 });
 
-console.log('asfasdfasdfdasfasdfa');
-
 app.postMessage({ type: "ready" });
 
 export default app;

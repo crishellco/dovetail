@@ -16,6 +16,6 @@ app.port.onMessage.addListener(function({type, data}) {
 	}
 });
 
-app.postMessage({ type: 'ready' });
+app.postMessage({ type: 'ready', data: window.location.href });
 
 export default app;

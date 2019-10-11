@@ -8,7 +8,8 @@
   let open = false
   let selection = null
 
-  function select() {
+  function select(template) {
+    document.querySelector('#pull_request_body').value = atob(template.content);
     selection = template
     open = false
   }
@@ -23,13 +24,13 @@
     </svg>
   </div>
   <div class="pb-2 text-xs italic">
-    {selection || 'No pull request template selected'}
+    {selection ? selection.name : 'No pull request template selected'}
   </div>
   {#if open}
   <ul class="menu right-0 left-0 flex flex-col absolute">
     {#each templates as template}
-    <li class="hover:bg-blue-600 hover:text-white py-1 px-2 cursor-pointer" on:click="{select}">
-      {template}
+    <li class="hover:bg-blue-600 hover:text-white py-1 px-2 cursor-pointer" on:click={()=>select(template)}>
+      {template.name}
     </li>
     {/each}
   </ul>
