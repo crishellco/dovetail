@@ -27,7 +27,7 @@
     {selection ? selection.name : 'No pull request template selected'}
   </div>
   {#if open}
-  <ul class="menu right-0 left-0 flex flex-col absolute">
+  <ul class="menu right-0 left-0 flex flex-col absolute bg-white z-50">
     {#each templates as template}
     <li class="hover:bg-blue-600 hover:text-white py-1 px-2 cursor-pointer" on:click={()=>select(template)}>
       {template.name}
