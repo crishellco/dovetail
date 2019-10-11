@@ -42,9 +42,11 @@
     Connecting...
   </div>
   {:else}
+  {#if currentToken}
+    All set. <span on:click="{() => currentToken =  null}">Use a differnt token?</span>
+  {:else}
   <div class="flex">
     <div class="flex-1">
-      {currentToken}
       <input
         bind:value={newToken}
         class="bg-gray-200 appearance-none border-2 border-gray-300 border-r-0
@@ -61,6 +63,7 @@
       Save
     </button>
   </div>
+  {/if}
   <div class="text-xs mt-2">
     <a
       href="https://help.github.com/en/enterprise/2.17/user/articles/creating-a-personal-access-token-for-the-command-line"
