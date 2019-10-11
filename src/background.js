@@ -49,17 +49,17 @@ const postMessage = (message) => {
 }
 
 const testAndSetToken = async (token, port) => {
-  try {
-    await fetch('https://api.github.com/user', {
-      headers: getRequestHeaders(token),
-      method: 'get'
-    });
+  const response = await fetch('https://api.github.com/user', {
+    headers: getRequestHeaders(token),
+    method: 'get'
+  });
+
+  if(response.ok) {
     chrome.storage.sync.set({ token: token });
     port.postMessage({type: 'token_valid', data: token});
-  } catch(e) {
-    console.log('test failed', e);
+  } else {
     chrome.storage.sync.remove('token');
-    port.postMessage({type: 'token_invalid', data: token});
+    port.postMessage({type: 'token_invalid'});
   }
 }
 
@@ -96,6 +96,9 @@ chrome.runtime.onConnect.addListener((port) => {
           })
         });
         // maybe start getting templates here, would send back an org and repo value
+        break;
+      case 'remove_token':
+        chrome.storage.sync.remove('token');
         break;
       case 'set_token':
         testAndSetToken(data, port);
