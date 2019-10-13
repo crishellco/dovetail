@@ -59,7 +59,7 @@
     top: 20px;
   }
 </style>
-{#if !isDirty}
+{#if !isDirty && templates.length}
 <div class="flex flex-column w-full relative border-b mt-2">
   <div
     class="text-bold discussion-sidebar-heading discussion-sidebar-toggle
@@ -92,8 +92,8 @@
       {#each templates as template}
         <li
           class="hover:bg-blue-600 hover:text-white py-1 px-2 cursor-pointer truncate text-xs font-semibold"
-          class:bg-blue-600={template.name === selection.name}
-          class:text-white={template.name === selection.name}
+          class:bg-blue-600={template.name === (selection || {}).name}
+          class:text-white={template.name === (selection || {}).name}
           on:click={() => select(template)}>
           {template.name}
         </li>

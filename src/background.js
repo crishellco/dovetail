@@ -1,13 +1,14 @@
-// import parseUrl from 'parse-github-url';
-const TOKEN_LOCAL_STORAGE_KEY = "rms-pr-template-picker:token";
+import _ from "../lodash.min";
 const cachedTemplates = {};
 
-const composeContentsUrl = (owner, repo, path = "") => `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+const composeContentsUrl = (owner, repo, branch = "", path = "") =>
+  `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
 
-const getContents = ({ owner, repo, path = "", token }) => fetch(composeContentsUrl(owner, repo, path), {
-  headers: getRequestHeaders(token),
-  method: "get"
-});
+const getContents = ({ branch = "", owner, repo, path = "", token }) =>
+  fetch(composeContentsUrl(owner, repo, branch, path), {
+    headers: getRequestHeaders(token),
+    method: "get"
+  });
 
 const getRequestHeaders = token => ({
   Authorization: `token ${token}`,
@@ -58,12 +59,6 @@ const getTemplates = async data => {
   return templates;
 };
 
-const postMessage = message => {
-  const port = chrome.runtime.connect({ name: "template-api" });
-
-  port.postMessage(message);
-};
-
 const testAndSetToken = async (token, port) => {
   const response = await fetch("https://api.github.com/user", {
     headers: getRequestHeaders(token),
@@ -80,14 +75,18 @@ const testAndSetToken = async (token, port) => {
 };
 
 function parseUrl(url) {
-  const pieces = url.split("/");
+  const repoPieces = url.split("/");
+  const branchPieces = _.last(url.split("compare"));
+  const branch = _.first(_.last(branchPieces.split("...")).split("?"));
+
   return {
-    owner: pieces[3],
-    repo: pieces[4]
+    branch,
+    owner: repoPieces[3],
+    repo: repoPieces[4]
   };
 }
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, {status, url}) => {
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, { status, url }) => {
   const gitHubCommit = /.*github.com\/.*\/compare\/.*/;
 
   if (
