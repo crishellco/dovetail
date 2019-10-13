@@ -1,5 +1,6 @@
 // import parseUrl from 'parse-github-url';
 const TOKEN_LOCAL_STORAGE_KEY = "rms-pr-template-picker:token";
+const cachedTemplates = {};
 
 const composeContentsUrl = (owner, repo, path = "") => `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 
@@ -35,24 +36,24 @@ const getTemplates = async data => {
     ...data
   });
 
-  if (!secondaryTemplateFiles.ok) {
-    return templates;
+  if (secondaryTemplateFiles.ok) {
+    const secondaryTemplateFileContents = await secondaryTemplateFiles.json();
+    let i;
+    let secondaryTemplateResponse;
+    let secondaryTemplate;
+
+    for (i in secondaryTemplateFileContents) {
+      secondaryTemplateResponse = await getContents({
+        path: secondaryTemplateFileContents[i].path,
+        ...data
+      });
+      secondaryTemplate = await secondaryTemplateResponse.json();
+      secondaryTemplate.content = atob(secondaryTemplate.content);
+      templates.push(secondaryTemplate);
+    }
   }
 
-  const secondaryTemplateFileContents = await secondaryTemplateFiles.json();
-  let i;
-  let secondaryTemplateResponse;
-  let secondaryTemplate;
-
-  for (i in secondaryTemplateFileContents) {
-    secondaryTemplateResponse = await getContents({
-      path: secondaryTemplateFileContents[i].path,
-      ...data
-    });
-    secondaryTemplate = await secondaryTemplateResponse.json();
-    secondaryTemplate.content = atob(secondaryTemplate.content);
-    templates.push(secondaryTemplate);
-  }
+  cachedTemplates[`${data.owner}:${data.repo}`] = templates;
 
   return templates;
 };
@@ -86,11 +87,11 @@ function parseUrl(url) {
   };
 }
 
-chrome.tabs.onUpdated.addListener((tabId, {status}, {status, url}) => {
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, {status, url}) => {
   const gitHubCommit = /.*github.com\/.*\/compare\/.*/;
 
   if (
-    status === "complete" &&
+    changeInfo.status === "complete" &&
     status === "complete" &&
     gitHubCommit.test(url)
   ) {
@@ -111,6 +112,11 @@ chrome.runtime.onConnect.addListener(port => {
           port.postMessage({
             type: "token",
             data: token
+          });
+
+          port.postMessage({
+            type: "templates",
+            data: cachedTemplates[`${data.owner}:${data.repo}`] || []
           });
 
           const templates = await getTemplates({
