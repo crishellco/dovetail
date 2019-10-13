@@ -43,7 +43,7 @@
       }
     }
 
-    isDirty = dirty && value !== "";
+    isDirty = dirty && value !== "" && templates.length > 1;
   }
 
   function select(template) {
@@ -61,8 +61,17 @@
     top: 20px;
   }
 </style>
-{#if !isDirty && templates.length}
-<div class="flex flex-column w-full relative border-b mt-2">
+{#if isDirty}
+<div class="flex flex-column w-full relative border-b mt-2 pb-3">
+  <div
+    class="text-bold discussion-sidebar-heading discussion-sidebar-toggle
+    hx_rsm-trigger flex flex-row items-between">
+    <div class="flex-1">Template</div>
+  </div>
+  <div class="text-xs text-gray-700">Template cannot be changed once body has been edited</div>
+</div>
+{:else if templates.length > 1}
+<div class="flex flex-column w-full relative border-b mt-2 pb-3">
   <div
     class="text-bold discussion-sidebar-heading discussion-sidebar-toggle
     hx_rsm-trigger flex flex-row items-between"
@@ -86,11 +95,11 @@
     </svg>
   </div>
   {#if selection}
-  <div class="pb-2 text-xs font-semibold text-gray-900 truncate">
+  <div class="px-1 p-px text-xs font-semibold text-white truncate rounded-sm bg-blue-600">
     {selection.name}
   </div>
   {:else}
-  <div class="pb-2 text-xs truncate text-gray-700">None chosen</div>
+  <div class="text-xs truncate text-gray-700">None chosen</div>
   {/if}
   {#if open}
     <ul class="menu right-0 left-0 flex flex-col absolute bg-white z-50">

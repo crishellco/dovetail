@@ -69,9 +69,9 @@
       </div>
       <button
         on:click|preventDefault={handleDeleteTokenClick}
-        class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4
+        class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4
         rounded-r">
-        Delete
+        Disconnect
       </button>
     </div>
   {:else if isTestingToken}
@@ -81,7 +81,7 @@
   {:else}
     {#if tokenIsInvalid}
       <div
-        class="mb-2 py-2 px-4 bg-red-500 rounded text-white font-semibold
+        class="mb-4 py-2 px-4 bg-red-100 rounded text-red-600 font-semibold
         tracking-wide">
         Invalid token
       </div>
@@ -94,14 +94,14 @@
           rounded-l w-full py-2 px-4 text-gray-700 leading-tight
           focus:outline-none focus:border-blue-500"
           id="inline-full-name"
-          type="text"
+          type="password"
           placeholder="Personal Auth Token w/repo access" />
       </div>
       <button
         on:click|preventDefault={handleAddTokenClick}
         class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4
         rounded-r">
-        Save
+        Connect
       </button>
     </div>
     <div class="text-xs mt-2">
