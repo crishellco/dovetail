@@ -25,7 +25,7 @@ const getTemplate = async data => {
   }
 
   const template = await response.json();
-  template.content = atob(template.content);
+  template.content = atob(template.content) + `\n\n<sup><sub>[Template: ${template.name}]</sub></sup>`;
   template.name = template.name === DEFAULT_TEMPLATE_NAME ? 'default' : template.name;
 
   return template;
