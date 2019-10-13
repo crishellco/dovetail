@@ -25,10 +25,12 @@ const getTemplates = async (data) => {
   const templates = [];
 
   // Get primary template
-  const primaryTemplate = await getContents({ path: '.github/PULL_REQUEST_TEMPLATE.md', ...data });
+  const primaryTemplateResponse = await getContents({ path: '.github/PULL_REQUEST_TEMPLATE.md', ...data });
 
-  if(primaryTemplate.ok) {
-    templates.push(await primaryTemplate.json());
+  if(primaryTemplateResponse.ok) {
+    const primaryTemplate = await primaryTemplateResponse.json();
+    primaryTemplate.content = atob(primaryTemplate.content);
+    templates.push(primaryTemplate);
   }
 
   // Get secondary templates
@@ -40,11 +42,14 @@ const getTemplates = async (data) => {
 
   const secondaryTemplateFileContents = await secondaryTemplateFiles.json();
   let i;
+  let secondaryTemplateResponse;
+  let secondaryTemplate;
 
   for(i in secondaryTemplateFileContents) {
-    const response = await getContents({ path: secondaryTemplateFileContents[i].path, ...data });
-    console.log(response);
-    templates.push(await response.json());
+    secondaryTemplateResponse = await getContents({ path: secondaryTemplateFileContents[i].path, ...data });
+    secondaryTemplate = await secondaryTemplateResponse.json();
+    secondaryTemplate.content = atob(secondaryTemplate.content);
+    templates.push(secondaryTemplate);
   }
 
   return templates;
@@ -79,16 +84,20 @@ function parseUrl(url) {
   }
 }
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
-    chrome.declarativeContent.onPageChanged.addRules([{
-      conditions: [new chrome.declarativeContent.PageStateMatcher({
-        pageUrl: {hostEquals: 'github.com'},
-      })],
-      actions: [new chrome.declarativeContent.ShowPageAction()]
-    }]);
-  });
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+  console.log(arguments);
 });
+
+// chrome.runtime.onInstalled.addListener(() => {
+//   chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
+//     chrome.declarativeContent.onPageChanged.addRules([{
+//       conditions: [new chrome.declarativeContent.PageStateMatcher({
+//         pageUrl: {hostEquals: 'github.com'},
+//       })],
+//       actions: [new chrome.declarativeContent.ShowPageAction()]
+//     }]);
+//   });
+// });
 
 chrome.runtime.onConnect.addListener((port) => {
   port.onMessage.addListener(({ type, data }) => {
