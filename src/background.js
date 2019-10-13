@@ -1,24 +1,17 @@
 // import parseUrl from 'parse-github-url';
 const TOKEN_LOCAL_STORAGE_KEY = "rms-pr-template-picker:token";
 
-const composeContentsUrl = (owner, repo, path = "") => {
-  return `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-};
+const composeContentsUrl = (owner, repo, path = "") => `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 
-const getContents = ({ owner, repo, path = "", token }) => {
-  console.log("getContents", owner, repo, path, token);
-  return fetch(composeContentsUrl(owner, repo, path), {
-    headers: getRequestHeaders(token),
-    method: "get"
-  });
-};
+const getContents = ({ owner, repo, path = "", token }) => fetch(composeContentsUrl(owner, repo, path), {
+  headers: getRequestHeaders(token),
+  method: "get"
+});
 
-const getRequestHeaders = token => {
-  return {
-    Authorization: `token ${token}`,
-    Accept: "application/vnd.github.v3+json"
-  };
-};
+const getRequestHeaders = token => ({
+  Authorization: `token ${token}`,
+  Accept: "application/vnd.github.v3+json"
+});
 
 const getTemplates = async data => {
   let secondaryTemplateFiles;
@@ -77,7 +70,7 @@ const testAndSetToken = async (token, port) => {
   });
 
   if (response.ok) {
-    chrome.storage.sync.set({ token: token });
+    chrome.storage.sync.set({ token });
     port.postMessage({ type: "token_valid", data: token });
   } else {
     chrome.storage.sync.remove("token");
@@ -93,46 +86,37 @@ function parseUrl(url) {
   };
 }
 
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-  var gitHubCommit = /.*github.com\/.*\/compare\/.*/;
+chrome.tabs.onUpdated.addListener((tabId, {status}, {status, url}) => {
+  const gitHubCommit = /.*github.com\/.*\/compare\/.*/;
 
   if (
-    changeInfo.status === "complete" &&
-    tab.status === "complete" &&
-    gitHubCommit.test(tab.url)
+    status === "complete" &&
+    status === "complete" &&
+    gitHubCommit.test(url)
   ) {
-    console.log("onActivated passed");
     sendMsgToActiveTab({ type: "onCompare" });
   }
 });
 
-function sendMsgToActiveTab(message) {
-  chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-    chrome.tabs.sendMessage(tabs[0].id, message, function(response) {
-      console.log(response);
-    });
-  });
-}
+const sendMsgToActiveTab = message =>
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs =>
+    chrome.tabs.sendMessage(tabs[0].id, message)
+  );
 
 chrome.runtime.onConnect.addListener(port => {
   port.onMessage.addListener(({ type, data }) => {
     switch (type) {
       case "ready":
-        console.log("b ready");
         chrome.storage.sync.get("token", async ({ token }) => {
           port.postMessage({
             type: "token",
             data: token
           });
 
-          console.log(data, parseUrl(data));
-
           const templates = await getTemplates({
             token,
             ...parseUrl(data)
           });
-
-          console.log(templates);
 
           port.postMessage({
             type: "templates",
