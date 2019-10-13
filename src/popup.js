@@ -4,13 +4,6 @@ const app = new App({
   target: document.body
 });
 
-app.port.onMessage.addListener(function({ type, data }) {
-  switch (type) {
-    default:
-      break;
-  }
-});
-
-app.sendReady();
+app.sendReady(false);
 
 export default app;

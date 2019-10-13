@@ -82,12 +82,6 @@ function parseUrl(url) {
   };
 }
 
-const reloadTab = () => {
-  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-    chrome.tabs.update(tabs[0].id, { url: tabs[0].url });
-  });
-}
-
 const testAndSetToken = async (token, port) => {
   const response = await fetch("https://api.github.com/user", {
     headers: getRequestHeaders(token),
@@ -97,7 +91,6 @@ const testAndSetToken = async (token, port) => {
   if (response.ok) {
     chrome.storage.sync.set({ token });
     port.postMessage({ type: "token_valid", data: token });
-    reloadTab();
   } else {
     chrome.storage.sync.remove("token");
     port.postMessage({ type: "token_invalid" });
@@ -121,7 +114,7 @@ const sendMsgToActiveTab = message =>
   });
 
 chrome.runtime.onConnect.addListener(port => {
-  port.onMessage.addListener(({ type, data }) => {
+  port.onMessage.addListener(({ type, data, fetchTemplates }) => {
     switch (type) {
       case "ready":
         chrome.storage.sync.get("token", async ({ token }) => {
@@ -130,6 +123,10 @@ chrome.runtime.onConnect.addListener(port => {
             data: token
           });
 
+          if(!fetchTemplates) {
+            return;
+          }
+
           data = parseUrl(data);
 
           const templates = await getTemplates({
@@ -137,7 +134,7 @@ chrome.runtime.onConnect.addListener(port => {
             ...data
           });
 
-          port.postMessage({
+          sendMsgToActiveTab({
             type: "templates",
             data: templates
           });
@@ -145,7 +142,13 @@ chrome.runtime.onConnect.addListener(port => {
         break;
       case "remove_token":
         chrome.storage.sync.remove("token");
-        reloadTab();
+        sendMsgToActiveTab({
+          type: "templates",
+          data: []
+        });
+        port.postMessage({
+          type: "token",
+        });
         break;
       case "set_token":
         testAndSetToken(data, port);

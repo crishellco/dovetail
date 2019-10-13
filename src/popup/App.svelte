@@ -16,6 +16,7 @@
         isTestingToken = false;
         newToken = "";
         setCurrentToken(data);
+        sendReady();
         break;
       case "token_invalid":
         isTestingToken = false;
@@ -30,9 +31,9 @@
     port.postMessage(message);
   }
 
-  export function sendReady() {
+  export function sendReady(fetchTemplates = true) {
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-      postMessage({ type: "ready", data: tabs[0].url });
+      postMessage({ type: "ready", data: tabs[0].url, fetchTemplates });
     });
   }
 
