@@ -31,6 +31,8 @@
       return;
     }
 
+    selection = null;
+
     let dirty = true;
     const value = String(textarea.value).trim();
 
