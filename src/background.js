@@ -123,6 +123,10 @@ chrome.runtime.onConnect.addListener(port => {
             data: token
           });
 
+          if(!token) {
+            chrome.browserAction.setBadgeText({text: '!'});
+          }
+
           if(!fetchTemplates) {
             return;
           }
