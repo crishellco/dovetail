@@ -11,6 +11,6 @@ app.port.onMessage.addListener(function({ type, data }) {
   }
 });
 
-app.postMessage({ type: "ready" });
+app.sendReady();
 
 export default app;

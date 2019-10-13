@@ -29,10 +29,6 @@ chrome.runtime.onMessage.addListener(({ type }, sender, sendResponse) => {
   switch (type) {
     case "onCompare":
       setup();
-      // sendResponse('onCompare received');
-      // app.postMessage({ type: 'ready', data: window.location.href });
       break;
   }
 });
-
-// export default app;

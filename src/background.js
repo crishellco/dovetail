@@ -1,5 +1,7 @@
 import _ from "../lodash.min";
-const cachedTemplates = {};
+
+const DEFAULT_TEMPLATE_NAME = 'PULL_REQUEST_TEMPLATE.md';
+const TEMPLATE_DIRECTORY = 'PULL_REQUEST_TEMPLATE';
 
 const composeContentsUrl = (owner, repo, branch = "", path = "") =>
   `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
@@ -15,63 +17,57 @@ const getRequestHeaders = token => ({
   Accept: "application/vnd.github.v3+json"
 });
 
+const getTemplate = async data => {
+  const response = await getContents(data);
+
+  if (!response.ok) {
+    return;
+  }
+
+  const template = await response.json();
+  template.content = atob(template.content);
+  template.name = template.name === DEFAULT_TEMPLATE_NAME ? 'default' : (template.name.split('.').slice(0, -1)).join('.');
+
+  return template;
+};
+
 const getTemplates = async data => {
   let secondaryTemplateFiles;
   const templates = [];
 
-  // Get primary template
-  const primaryTemplateResponse = await getContents({
-    path: ".github/PULL_REQUEST_TEMPLATE.md",
+  const primaryTemplate = await getTemplate({
+    path: `.github/${DEFAULT_TEMPLATE_NAME}`,
     ...data
   });
 
-  if (primaryTemplateResponse.ok) {
-    const primaryTemplate = await primaryTemplateResponse.json();
-    primaryTemplate.content = atob(primaryTemplate.content);
+  if (primaryTemplate) {
     templates.push(primaryTemplate);
   }
 
   // Get secondary templates
   secondaryTemplateFiles = await getContents({
-    path: ".github/PULL_REQUEST_TEMPLATE",
+    path: `.github/${TEMPLATE_DIRECTORY}`,
     ...data
   });
 
   if (secondaryTemplateFiles.ok) {
     const secondaryTemplateFileContents = await secondaryTemplateFiles.json();
     let i;
-    let secondaryTemplateResponse;
     let secondaryTemplate;
 
     for (i in secondaryTemplateFileContents) {
-      secondaryTemplateResponse = await getContents({
+      secondaryTemplate = await getTemplate({
         path: secondaryTemplateFileContents[i].path,
         ...data
       });
-      secondaryTemplate = await secondaryTemplateResponse.json();
-      secondaryTemplate.content = atob(secondaryTemplate.content);
-      templates.push(secondaryTemplate);
+
+      if (secondaryTemplate) {
+        templates.push(secondaryTemplate);
+      }
     }
   }
 
-  cachedTemplates[`${data.owner}:${data.repo}`] = templates;
-
   return templates;
-};
-
-const testAndSetToken = async (token, port) => {
-  const response = await fetch("https://api.github.com/user", {
-    headers: getRequestHeaders(token),
-    method: "get"
-  });
-
-  if (response.ok) {
-    chrome.storage.sync.set({ token });
-    port.postMessage({ type: "token_valid", data: token });
-  } else {
-    chrome.storage.sync.remove("token");
-    port.postMessage({ type: "token_invalid" });
-  }
 };
 
 function parseUrl(url) {
@@ -86,9 +82,30 @@ function parseUrl(url) {
   };
 }
 
+const reloadTab = () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    chrome.tabs.update(tabs[0].id, { url: tabs[0].url });
+  });
+}
+
+const testAndSetToken = async (token, port) => {
+  const response = await fetch("https://api.github.com/user", {
+    headers: getRequestHeaders(token),
+    method: "get"
+  });
+
+  if (response.ok) {
+    chrome.storage.sync.set({ token });
+    port.postMessage({ type: "token_valid", data: token });
+    reloadTab();
+  } else {
+    chrome.storage.sync.remove("token");
+    port.postMessage({ type: "token_invalid" });
+  }
+};
+
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, { status, url }) => {
   const gitHubCommit = /.*github.com\/.*\/compare\/.*/;
-
   if (
     changeInfo.status === "complete" &&
     status === "complete" &&
@@ -99,9 +116,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, { status, url }) => {
 });
 
 const sendMsgToActiveTab = message =>
-  chrome.tabs.query({ active: true, currentWindow: true }, tabs =>
-    chrome.tabs.sendMessage(tabs[0].id, message)
-  );
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    chrome.tabs.sendMessage(tabs[0].id, message);
+  });
 
 chrome.runtime.onConnect.addListener(port => {
   port.onMessage.addListener(({ type, data }) => {
@@ -113,14 +130,11 @@ chrome.runtime.onConnect.addListener(port => {
             data: token
           });
 
-          port.postMessage({
-            type: "templates",
-            data: cachedTemplates[`${data.owner}:${data.repo}`] || []
-          });
+          data = parseUrl(data);
 
           const templates = await getTemplates({
             token,
-            ...parseUrl(data)
+            ...data
           });
 
           port.postMessage({
@@ -131,6 +145,7 @@ chrome.runtime.onConnect.addListener(port => {
         break;
       case "remove_token":
         chrome.storage.sync.remove("token");
+        reloadTab();
         break;
       case "set_token":
         testAndSetToken(data, port);

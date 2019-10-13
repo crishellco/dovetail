@@ -85,9 +85,13 @@
         0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" />
     </svg>
   </div>
-  <div class="pb-2 text-xs font-semibold text-gray-900">
-    {selection ? selection.name : ''}
+  {#if selection}
+  <div class="pb-2 text-xs font-semibold text-gray-900 truncate">
+    {selection.name}
   </div>
+  {:else}
+  <div class="pb-2 text-xs truncate text-gray-700">None chosen</div>
+  {/if}
   {#if open}
     <ul class="menu right-0 left-0 flex flex-col absolute bg-white z-50">
     <li class="bg-gray-100 py-1 px-2 border-b border-gray-300 text-xs font-semibold">Select a template</li>
