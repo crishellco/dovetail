@@ -2,7 +2,7 @@
 
 **Install dependencies**
 ```bash
-yarn install
+yarn
 ```
 
 **Build**
