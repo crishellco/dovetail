@@ -124,7 +124,7 @@ chrome.runtime.onConnect.addListener(port => {
           });
 
           if(!token) {
-            chrome.browserAction.setBadgeText({text: '!'});
+            // chrome.browserAction.setBadgeText({text: '!'});
           }
 
           if(!fetchTemplates) {
