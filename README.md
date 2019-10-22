@@ -1,13 +1,8 @@
 ## Github PR Template Picker
 
-**Install dependencies**
+**Install dependencies & build**
 ```bash
-yarn
-```
-
-**Build**
-```bash
-yarn build
+yarn && yarn build
 ```
 
 **Install**
