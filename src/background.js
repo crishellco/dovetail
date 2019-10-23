@@ -4,7 +4,7 @@ const DEFAULT_TEMPLATE_NAME = 'PULL_REQUEST_TEMPLATE.md';
 const TEMPLATE_DIRECTORY = 'PULL_REQUEST_TEMPLATE';
 
 const composeContentsUrl = (owner, repo, branch = "", path = "") =>
-  `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+  `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 
 const getContents = ({ branch = "", owner, repo, path = "", token }) =>
   fetch(composeContentsUrl(owner, repo, branch, path), {
