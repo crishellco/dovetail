@@ -52,12 +52,10 @@ const getTemplates = async data => {
 
   if (secondaryTemplateFiles.ok) {
     const secondaryTemplateFileContents = await secondaryTemplateFiles.json();
-    let i;
-    let secondaryTemplate;
 
-    for (i in secondaryTemplateFileContents) {
-      secondaryTemplate = await getTemplate({
-        path: secondaryTemplateFileContents[i].path,
+    for (let file of secondaryTemplateFileContents) {
+      let secondaryTemplate = await getTemplate({
+        path: file.path,
         ...data
       });
 
@@ -97,17 +95,6 @@ const testAndSetToken = async (token, port) => {
   }
 };
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, { status, url }) => {
-  const gitHubCommit = /.*github.com\/.*\/compare\/.*/;
-  if (
-    changeInfo.status === "complete" &&
-    status === "complete" &&
-    gitHubCommit.test(url)
-  ) {
-    sendMsgToActiveTab({ type: "onCompare" });
-  }
-});
-
 const sendMsgToActiveTab = message =>
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
     chrome.tabs.sendMessage(tabs[0].id, message);
@@ -117,7 +104,7 @@ chrome.runtime.onConnect.addListener(port => {
   port.onMessage.addListener(({ type, data, fetchTemplates }) => {
     switch (type) {
       case "ready":
-        chrome.storage.sync.get("token", async ({ token }) => {
+        chrome.storage.sync.get(["token"], async ({ token }) => {
           port.postMessage({
             type: "token",
             data: token
@@ -134,7 +121,7 @@ chrome.runtime.onConnect.addListener(port => {
             ...data
           });
 
-          sendMsgToActiveTab({
+          port.postMessage({
             type: "templates",
             data: templates
           });
