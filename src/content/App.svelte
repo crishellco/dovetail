@@ -47,8 +47,10 @@
   function select(template) {
     if (!isDirty) {
       if (selection && template.name === selection.name) {
+        selection = null
         textarea.value = "";
       } else {
+        selection = template
         textarea.value = template.content;
       }
     }
