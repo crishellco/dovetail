@@ -14,7 +14,8 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.github.com/*/compare/*"],
+      "matches": [ "*://github.com/*" ],
+      "run_at": "document_end",
       "js": ["content.js"],
       "css": ["global.css"]
     }

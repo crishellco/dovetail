@@ -100,6 +100,7 @@ const sendMsgToActiveTab = message =>
     chrome.tabs.sendMessage(tabs[0].id, message);
   });
 
+
 chrome.runtime.onConnect.addListener(port => {
   port.onMessage.addListener(({ type, data, fetchTemplates }) => {
     switch (type) {
