@@ -7,76 +7,54 @@
     port.postMessage(message);
   }
 
-  let textarea;
-  let isDirty = false;
+  const textarea = document.querySelector("#pull_request_body");
+  let value = String(textarea.value).trim();
   let open = false;
   let selection = null;
 
-  $: templates, handleStateChange();
-
-  onDestroy(() => {
-    window.removeEventListener("click", handleWindowClick);
-  });
-
-  onMount(() => {
-    textarea = document.querySelector("#pull_request_body");
-
-    if (textarea) {
-      handleStateChange();
-
-      textarea.addEventListener("keyup", () => {
-        handleStateChange();
-      });
+  $: isDirty = templates.reduce((clean, template) => {
+    if (value === String(template.content).trim()) {
+      selection = template;
+      return false
     }
-
-    window.addEventListener("click", handleWindowClick);
-  });
+    return clean
+  }, true) && value !== '';
 
   function handleWindowClick() {
     open = false;
   }
 
-  function handleStateChange() {
-    if (!textarea) {
-      return;
-    }
-
-    selection = null;
-
-    let dirty = true;
-    const value = String(textarea.value).trim();
-
-    for (let i in templates) {
-      if (value === String(templates[i].content).trim()) {
-        selection = templates[i];
-        dirty = false;
-      }
-    }
-
-    isDirty = dirty && value !== "";
+  function handleTextareaChange(e) {
+    value = String(e.target.value).trim();
   }
+
+  onDestroy(() => {
+    window.removeEventListener("click", handleWindowClick);
+    if (textarea){
+      textarea.removeEventListener("keyup", handleTextareaChange);
+      textarea.removeEventListener("change", handleTextareaChange);
+    }
+  });
+
+  onMount(() => {
+    window.addEventListener("click", handleWindowClick);
+    if (textarea) {
+      textarea.addEventListener("keyup", handleTextareaChange);
+      textarea.addEventListener("change", handleTextareaChange);
+    }
+  });
 
   function select(template) {
     if (!isDirty) {
       if (selection && template.name === selection.name) {
-        selection = null;
-        document.querySelector("#pull_request_body").value = "";
-        handleStateChange();
+        textarea.value = "";
       } else {
-        document.querySelector("#pull_request_body").value = template.content;
-        handleStateChange();
+        textarea.value = template.content;
       }
     }
-
     open = false;
   }
 </script>
-
-<style>
-  .menu {
-    top: 20px;
-  }
-</style>
 
 {#if isDirty}
   <div class="flex flex-column w-full relative border-b mt-2 pb-3">
@@ -152,3 +130,9 @@
     {/if}
   </div>
 {/if}
+
+<style>
+  .menu {
+    top: 20px;
+  }
+</style>
