@@ -4,6 +4,4 @@ const app = new App({
   target: document.body
 });
 
-app.sendReady(false);
-
 export default app;

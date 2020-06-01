@@ -1,65 +1,94 @@
 <script>
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy, onMount } from 'svelte'
 
-  export let templates = [];
-  export const port = chrome.runtime.connect({ name: "template-api" });
+  export let repo = {}
+  export let createTemplateUrl = ''
+  export let templates = []
   export function postMessage(message) {
-    port.postMessage(message);
+    chrome.runtime.sendMessage(message)
   }
 
-  const textarea = document.querySelector("#pull_request_body");
-  let value = String(textarea.value).trim();
-  let open = false;
-  let selection = null;
+  const textarea = document.querySelector('#pull_request_body')
+  let value = textarea ? String(textarea.value).trim() : ''
+  let open = false
+  let selection = null
 
-  $: isDirty = templates.reduce((clean, template) => {
-    if (value === String(template.content).trim()) {
-      selection = template;
-      return false
-    }
-    return clean
-  }, true) && value !== '';
+  $: isDirty =
+    templates.reduce((clean, template) => {
+      if (value === String(template.content).trim()) {
+        selection = template
+        return false
+      }
+      return clean
+    }, true) && value !== ''
+
+  $: {
+    createTemplateUrl = repo
+      ? `/${repo.owner}/${repo.repo}/new/${repo.branch}/.github/PULL_REQUEST_TEMPLATE.md`
+      : ''
+  }
 
   function handleWindowClick() {
-    open = false;
+    open = false
   }
 
   function handleTextareaChange(e) {
-    value = String(e.target.value).trim();
+    value = String(e.target.value).trim()
   }
 
   onDestroy(() => {
-    window.removeEventListener("click", handleWindowClick);
-    if (textarea){
-      textarea.removeEventListener("keyup", handleTextareaChange);
-      textarea.removeEventListener("change", handleTextareaChange);
+    window.removeEventListener('click', handleWindowClick)
+    if (textarea) {
+      textarea.removeEventListener('keyup', handleTextareaChange)
+      textarea.removeEventListener('change', handleTextareaChange)
     }
-  });
+  })
 
   onMount(() => {
-    window.addEventListener("click", handleWindowClick);
+    window.addEventListener('click', handleWindowClick)
     if (textarea) {
-      textarea.addEventListener("keyup", handleTextareaChange);
-      textarea.addEventListener("change", handleTextareaChange);
+      textarea.addEventListener('keyup', handleTextareaChange)
+      textarea.addEventListener('change', handleTextareaChange)
     }
-  });
+  })
+
+  function toggleOpen() {
+    if (!open) {
+      open = true
+      postMessage({
+        type: 'ready',
+        data: window.location.href,
+        fetchTemplates: true,
+      })
+    } else {
+      open = !open
+    }
+  }
 
   function select(template) {
     if (!isDirty) {
       if (selection && template.name === selection.name) {
         selection = null
-        textarea.value = "";
+        textarea.value = ''
       } else {
         selection = template
-        textarea.value = template.content;
+        textarea.value = template.content
       }
     }
-    open = false;
+    open = false
   }
 </script>
 
+<style>
+  .menu {
+    top: 20px;
+  }
+</style>
+
 {#if isDirty}
-  <div class="flex flex-column w-full relative border-b mt-2 pb-3">
+  <div
+    id="template-picker"
+    class="flex flex-column w-full relative border-b mt-2 pb-3">
     <div
       class="text-bold discussion-sidebar-heading discussion-sidebar-toggle
       hx_rsm-trigger flex flex-row items-between">
@@ -70,11 +99,13 @@
     </div>
   </div>
 {:else}
-  <div class="flex flex-column w-full relative border-b mt-2 pb-3">
+  <div
+    id="template-picker"
+    class="flex flex-column w-full relative border-b mt-2 pb-3">
     <div
       class="text-bold discussion-sidebar-heading discussion-sidebar-toggle
       hx_rsm-trigger flex flex-row items-between"
-      on:click|stopPropagation={() => (open = !open)}>
+      on:click|stopPropagation={() => toggleOpen()}>
       <div class="flex-1">Template</div>
       <svg
         class="octicon octicon-gear"
@@ -122,7 +153,7 @@
         {#if !templates.length}
           <li class="py-2 text-center text-xs">
             <a
-              href="https://github.com/crishellco/rms-github-pr-template-picker/new/master/.github/PULL_REQUEST_TEMPLATE.md"
+              href={createTemplateUrl}
               class="text-blue-500 hover:underline text-xs">
               Create a Pull Request Template
             </a>
@@ -132,9 +163,3 @@
     {/if}
   </div>
 {/if}
-
-<style>
-  .menu {
-    top: 20px;
-  }
-</style>

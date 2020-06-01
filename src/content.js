@@ -1,24 +1,56 @@
-import App from "./content/App.svelte";
+import App from './content/App.svelte'
+
+let app
+let existing
+let target
+
+function init() {
+  if (existing) {
+    existing.remove()
+  }
+
+  if (app) {
+    down()
+  }
+
+  app = new App({
+    anchor: target.firstChild,
+    target,
+  })
+
+  chrome.runtime.sendMessage({
+    type: 'ready',
+    data: window.location.href,
+    fetchTemplates: true,
+  })
+}
+
+function down() {
+  app.$destroy()
+  app = null
+}
 
 window.onload = () => {
-  const target = document.querySelector("[data-project-hovercards-enabled]");
+  chrome.runtime.onMessage.addListener(({ type, data, repo }) => {
+    if (type === 'templates' && app) {
+      app.$set({ repo, templates: data })
+    }
+  })
 
-  if (target) {
-    const app = new App({
-      anchor: target.firstChild,
-      target
-    });
+  setInterval(() => {
+    existing = document.querySelector('#template-picker')
+    target = document.querySelector('[data-project-hovercards-enabled]')
+    const pullRequestBody = document.querySelector(
+      '#new_pull_request #pull_request_body'
+    )
+    const isVisible = pullRequestBody
+      ? pullRequestBody.offsetParent !== null
+      : false
 
-    app.port.onMessage.addListener(({ type, data }) => {
-      switch (type) {
-        case "templates":
-          app.$set({ templates: data });
-          break;
-        default:
-          break;
-      }
-    });
-
-    app.postMessage({ type: "ready", data: window.location.href, fetchTemplates: true });
-  }
+    if (target && isVisible && (!app || !existing)) {
+      init()
+    } else if (!target && app) {
+      down()
+    }
+  }, 1500)
 }

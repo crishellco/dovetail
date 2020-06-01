@@ -1,61 +1,62 @@
 <script>
-  let currentToken = "";
-  let currentTokenMasked = "";
-  let isTestingToken = false;
-  let newToken = "";
-  let tokenIsInvalid = false;
+  let currentToken = ''
+  let currentTokenMasked = ''
+  let isTestingToken = false
+  let newToken = ''
+  let tokenIsInvalid = false
 
-  export const port = chrome.runtime.connect({ name: "template-api" });
-
-  port.onMessage.addListener(({ type, data }) => {
+  chrome.runtime.onMessage.addListener(({ type, data }) => {
     switch (type) {
-      case "token":
-        setCurrentToken(data);
-        break;
-      case "token_valid":
-        isTestingToken = false;
-        newToken = "";
-        setCurrentToken(data);
-        sendReady();
-        break;
-      case "token_invalid":
-        isTestingToken = false;
-        tokenIsInvalid = true;
-
-        setCurrentToken("");
-        break;
+      case 'token':
+        setCurrentToken(data)
+        break
+      case 'token_valid':
+        isTestingToken = false
+        newToken = ''
+        setCurrentToken(data)
+        sendReady()
+        break
+      case 'token_invalid':
+        isTestingToken = false
+        tokenIsInvalid = true
+        setCurrentToken('')
+        break
     }
-  });
+  })
+
+  sendReady()
 
   export function postMessage(message) {
-    port.postMessage(message);
+    chrome.runtime.sendMessage(message)
   }
 
   export function sendReady(fetchTemplates = true) {
-    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-      postMessage({ type: "ready", data: tabs[0].url, fetchTemplates });
-    });
+    chrome.tabs.query({ active: true }, tabs => {
+      if (tabs[0]) {
+        postMessage({ type: 'ready', data: tabs[0].url, fetchTemplates })
+      }
+    })
   }
 
-  function removeCurrentToken(token) {
-    setCurrentToken("");
-    newToken = "";
-    postMessage({ type: "remove_token" });
+  function removeCurrentToken() {
+    setCurrentToken('')
+    newToken = ''
+    postMessage({ type: 'remove_token' })
   }
 
   function setCurrentToken(token) {
-    currentToken = token;
-    currentTokenMasked = token.replace(/.(?=.{4,}$)/g, "*");
+    currentToken = token
+    currentTokenMasked = token.replace(/.(?=.{4,}$)/g, '*')
   }
 
   function handleAddTokenClick() {
-    tokenIsInvalid = false;
-    isTestingToken = true;
-    postMessage({ type: "set_token", data: newToken });
+    tokenIsInvalid = false
+    isTestingToken = true
+    postMessage({ type: 'set_token', data: newToken })
   }
 
   function handleDeleteTokenClick() {
-    removeCurrentToken();
+    removeCurrentToken()
   }
 </script>
 

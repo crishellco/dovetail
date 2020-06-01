@@ -1,10 +1,16 @@
 {
-  "name": "Gituhb Template Chooser",
+  "name": "GitHub PR Template Picker",
   "version": "1.0",
-  "description": "A browser extension that allows you to select pr templates",
-  "permissions": ["activeTab", "identity", "tabs", "declarativeContent", "storage", "webNavigation"],
+  "description": "A browser extension that allows you to select GitHub PR templates",
+  "permissions": [
+    "activeTab",
+    "identity",
+    "tabs",
+    "declarativeContent",
+    "storage"
+  ],
   "browser_action": {
-    "default_title": "Github PR",
+    "default_title": "GitHub PR Template Picker",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "images/key16.png",
@@ -14,15 +20,23 @@
   },
   "content_scripts": [
     {
-      "matches": [ "*://github.com/*" ],
+      "matches": [
+        "*://github.com/*"
+      ],
       "run_at": "document_end",
-      "js": ["content.js"],
-      "css": ["global.css"]
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "global.css"
+      ]
     }
   ],
   "background": {
-    "scripts": ["background.js"],
-    "persistent": false
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": true
   },
   "icons": {
     "16": "images/key16.png",
