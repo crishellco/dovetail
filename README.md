@@ -1,6 +1,7 @@
 ## Github PR Template Picker
 
 **Install dependencies & build**
+
 ```bash
 yarn && yarn build
 ```
@@ -10,3 +11,10 @@ yarn && yarn build
 - In Chrome/Firefox/Brave, go to Manage Extension
 - Enable Developer Mode
 - Load Unpacked from the `dist` directory
+
+**Usage**
+
+- Generate a personal auth token with repo access (https://github.com/settings/tokens)
+- Click the icon to add/remove GitHub person auth token
+
+![Enter GitHub Token](enter-token.png)
