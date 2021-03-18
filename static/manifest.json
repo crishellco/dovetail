@@ -6,7 +6,6 @@
     "activeTab",
     "identity",
     "tabs",
-    "declarativeContent",
     "storage"
   ],
   "browser_action": {

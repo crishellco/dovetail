@@ -5,6 +5,7 @@ import copy from 'rollup-plugin-copy';
 import json from 'rollup-plugin-json';
 import { terser } from 'rollup-plugin-terser';
 
+
 const production = !process.env.ROLLUP_WATCH;
 
 const base_config = {
@@ -45,7 +46,7 @@ const base_config = {
 				{ src: 'static/*', dest: 'dist'}
 			],
 			copyOnce: true
-		})
+		}),
 	],
 	watch: {
 		clearScreen: false

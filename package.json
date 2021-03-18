@@ -1,8 +1,9 @@
 {
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c && yarn zip",
     "lint": "eslint --ext .js,.svelte src/",
-    "lint:fix": "eslint --ext .js,.svelte src/ --fix"
+    "lint:fix": "eslint --ext .js,.svelte src/ --fix",
+    "zip": "zip -r dovetail.zip dist"
   },
   "devDependencies": {
     "axios": "^0.19.0",
