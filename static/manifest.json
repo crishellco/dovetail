@@ -1,6 +1,6 @@
 {
   "name": "GitHub PR Template Picker",
-  "version": "1.0",
+  "version": "0.1.0",
   "description": "A browser extension that allows you to select GitHub PR templates",
   "permissions": [
     "activeTab",
